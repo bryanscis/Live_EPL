@@ -28,9 +28,30 @@ def create_standings():
     standings = pd.DataFrame(statistics, index=rows, columns=teams).transpose()
     standings['Goal Difference'] = standings['Goals For'].astype(int) - standings['Goals Against'].astype(int)
     return standings
-            
-def display_current_standings(table):
-    print (table)
- 
+
+def main():
+    print("Welcome to Live EPL")
+    print("--------------------------------------------")
+    while True:
+        try:
+            command = input("Enter a command: ")
+        except EOFError:
+            print("\nSuccessfully Exited")
+            break
+        except KeyboardInterrupt:
+            print("\nSuccessfully Exited")
+            break
+        if command == 'standings':
+            print(standings_table)
+        elif command == 'exit':
+            print("\nSuccessfully Exited")
+            break
+        else:
+            print(command + " is not a valid command.")
+            print("Please type a valid command.")
+            print("Type in 'help' for list of commands.")
+        print("--------------------------------------------")
+
+
 standings_table = create_standings()
-print(standings_table)
+main()
