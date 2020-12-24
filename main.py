@@ -90,9 +90,27 @@ def main():
             break
         else:
             print(command + " is not a valid command.")
-            print("Please type a valid command.")
-            print("Type in 'help' for list of commands.")
+            print("Please type a valid command or type in 'help' for a list of commands")
         print("--------------------------------------------")
 
-standings_table = create_standings()
-main()
+# standings_table = create_standings()
+# main()
+
+last_minute = 0
+comment = ''
+while comment.startswith('Match ends') is not True:
+    try:
+        page = requests.get("https://www.espn.com/soccer/commentary?gameId=578528")
+        soup = BeautifulSoup(page.content, 'html.parser')
+        commentary= soup.find('div', class_='accordion active', id='match-commentary-1-tab-1')
+        print("--------------------------------------------")
+        minute = commentary.find_all(attrs={'data-id': ('comment-' + str(last_minute))})
+        time_stamp = minute[0].find(class_='time-stamp').get_text()
+        comment = minute[0].find(class_='game-details').get_text().strip()
+        print(time_stamp + ": " + comment)
+        last_minute += 1
+    except KeyboardInterrupt:
+        print('  Back to command')
+        break
+        
+    
