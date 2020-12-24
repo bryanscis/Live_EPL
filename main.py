@@ -95,22 +95,50 @@ def main():
 
 # standings_table = create_standings()
 # main()
-
-last_minute = 0
-comment = ''
-while comment.startswith('Match ends') is not True:
-    try:
-        page = requests.get("https://www.espn.com/soccer/commentary?gameId=578528")
-        soup = BeautifulSoup(page.content, 'html.parser')
-        commentary= soup.find('div', class_='accordion active', id='match-commentary-1-tab-1')
-        print("--------------------------------------------")
-        minute = commentary.find_all(attrs={'data-id': ('comment-' + str(last_minute))})
-        time_stamp = minute[0].find(class_='time-stamp').get_text()
-        comment = minute[0].find(class_='game-details').get_text().strip()
-        print(time_stamp + ": " + comment)
-        last_minute += 1
-    except KeyboardInterrupt:
-        print('  Back to command')
-        break
+def get_commentary(url):
+    last_minute = 0
+    comment = ''
+    while comment.startswith('Match ends') is not True:
+        try:
+            page = requests.get("https://www.espn.com/soccer/commentary?gameId=578528")
+            soup = BeautifulSoup(page.content, 'html.parser')
+            commentary= soup.find('div', class_='accordion active', id='match-commentary-1-tab-1')
+            print("--------------------------------------------")
+            minute = commentary.find_all(attrs={'data-id': ('comment-' + str(last_minute))})
+            time_stamp = minute[0].find(class_='time-stamp').get_text()
+            comment = minute[0].find(class_='game-details').get_text().strip()
+            print(time_stamp + ": " + comment)
+            last_minute += 1
+        except KeyboardInterrupt:
+            print('  Back to command')
+            break
         
-    
+# def find_live_games():
+#     today = re.sub(r'-', '', str(datetime.today()))
+#     page = requests.get('https://www.espn.com/soccer/fixtures/_/date/' + '20201201' + '/league/eng.1')
+#     soup = BeautifulSoup(page.content, 'html.parser')
+#     all_fixtures = soup.find('div', id='sched-container')
+#     fixtures_today = all_fixtures.find_all('a', attrs={'name' : ('&lpos=eng.1:schedule:score')})
+#     live_fixtures = []
+#     for element in fixtures_today:
+#         if element.get_text() != 'FT' or element.get_text() != 'Postponed':
+#             live_fixtures.append(re.search(r'=(\d+)', element['href']).group(1))
+#     print(live_fixtures)
+#     return live_fixtures
+
+def find_live_games():
+    today = re.sub(r'-', '', str(datetime.today()))
+    page = requests.get('https://www.espn.com/soccer/fixtures/_/date/' + '20201201' + '/league/eng.1')
+    soup = BeautifulSoup(page.content, 'html.parser')
+    all_fixtures = soup.find('div', id='sched-container')
+    fixtures_today = all_fixtures.find_all('tr', class_=True)
+    live_fixtures = {}
+    for element in fixtures_today:
+        team_names = element.find_all('a', attrs={'name': ('&lpos=eng.1:schedule:team')})
+        match = team_names[0].get_text() + ' vs ' + team_names[1].get_text()
+        match_status = element.find('a', attrs={'name': ('&lpos=eng.1:schedule:score')})
+        if match_status.get_text() != 'FT' and match_status.get_text() != 'Postponed':
+            live_fixtures[match]=(re.search(r'=(\d+)', match_status['href']).group(1))
+    return live_fixtures
+
+find_live_games()
