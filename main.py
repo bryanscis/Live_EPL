@@ -42,7 +42,7 @@ def convert_time(time):
     return la_time.time()
 
 def display_upcoming_fixtures():
-    today = re.sub(r'-', '', str(datetime.today()))
+    today = re.sub(r'-', '', str(date.today()))
     page = requests.get('https://www.espn.com/soccer/fixtures/_/date/' + today + '/league/eng.1')
     soup = BeautifulSoup(page.content, 'html.parser')
     count = 0
@@ -50,11 +50,11 @@ def display_upcoming_fixtures():
         try:
             fixtures = soup.find_all('table')[count].find_all('tr')
             date_caption = soup.find_all('h2', class_= 'table-caption')[count]
-            date = re.search(r'>([^+]*)<', str(date_caption)).group(1)
+            date_of_match = re.search(r'>([^+]*)<', str(date_caption)).group(1)
+            print("--------------------------------------------")
         except:
             break
-        print("--------------------------------------------")
-        print(date)
+        print(date_of_match)
         print("--------------------------------------------")
         for element in fixtures[1:]:
             spans = element.find_all('span')
@@ -75,6 +75,7 @@ def main():
     while True:
         try:
             command = input("Enter a command: ")
+            print("--------------------------------------------")
         except EOFError:
             print("\nSuccessfully Exited")
             break
@@ -85,6 +86,8 @@ def main():
             print(standings_table)
         elif command == 'fixtures':
             display_upcoming_fixtures()
+        elif command == 'live':
+            current_live_games()
         elif command == 'exit':
             print("Successfully Exited")
             break
@@ -93,22 +96,21 @@ def main():
             print("Please type a valid command or type in 'help' for a list of commands")
         print("--------------------------------------------")
 
-# standings_table = create_standings()
-# main()
 def get_commentary(url):
     last_minute = 0
     comment = ''
     while comment.startswith('Match ends') is not True:
         try:
-            page = requests.get("https://www.espn.com/soccer/commentary?gameId=578528")
+            page = requests.get(url)
             soup = BeautifulSoup(page.content, 'html.parser')
             commentary= soup.find('div', class_='accordion active', id='match-commentary-1-tab-1')
-            print("--------------------------------------------")
             minute = commentary.find_all(attrs={'data-id': ('comment-' + str(last_minute))})
             time_stamp = minute[0].find(class_='time-stamp').get_text()
             comment = minute[0].find(class_='game-details').get_text().strip()
             print(time_stamp + ": " + comment)
             last_minute += 1
+        except IndexError:
+            continue
         except KeyboardInterrupt:
             print('  Back to command')
             break
@@ -127,8 +129,8 @@ def get_commentary(url):
 #     return live_fixtures
 
 def find_live_games():
-    today = re.sub(r'-', '', str(datetime.today()))
-    page = requests.get('https://www.espn.com/soccer/fixtures/_/date/' + '20201201' + '/league/eng.1')
+    today = re.sub(r'-', '', str(date.today()))
+    page = requests.get('https://www.espn.com/soccer/fixtures/_/date/' + today + '/league/eng.1')
     soup = BeautifulSoup(page.content, 'html.parser')
     all_fixtures = soup.find('div', id='sched-container')
     fixtures_today = all_fixtures.find_all('tr', class_=True)
@@ -136,9 +138,25 @@ def find_live_games():
     for element in fixtures_today:
         team_names = element.find_all('a', attrs={'name': ('&lpos=eng.1:schedule:team')})
         match = team_names[0].get_text() + ' vs ' + team_names[1].get_text()
-        match_status = element.find('a', attrs={'name': ('&lpos=eng.1:schedule:score')})
-        if match_status.get_text() != 'FT' and match_status.get_text() != 'Postponed':
+        match_status = element.find('a', attrs={'name': ('&lpos=eng.1:schedule:live')})
+        #match_status = element.find('a', attrs={'name': ('&lpos=eng.1:schedule:score')})
+        if match_status is not None and match_status.get_text() == 'LIVE':
             live_fixtures[match]=(re.search(r'=(\d+)', match_status['href']).group(1))
     return live_fixtures
 
-find_live_games()
+def current_live_games():
+    live_games = find_live_games()
+    if not live_games:
+        print('There are currently no live games.')
+    else:
+        game_dict = {}
+        counter = 1
+        for game, game_id in live_games.items():
+            print('[' + str(counter) + ']' + ': ' + game)
+            game_dict[counter] = game_id
+            counter += 1
+        user_game = input('Which live game would you like to choose from? ')
+        get_commentary('https://www.espn.com/soccer/commentary?gameId=' + game_dict[int(user_game)])
+        
+standings_table = create_standings()
+main()
