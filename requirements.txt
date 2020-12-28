@@ -1,0 +1,4 @@
+beautifulsoup4>=4.9.3
+pandas>=0.24.2
+pytz>=2020.4
+requests>=2.25.1
