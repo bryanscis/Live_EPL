@@ -35,7 +35,7 @@ def create_standings():
 
 def main():
     print_divider()
-    print("Welcome to Live EPL")
+    print("                       Welcome to Live EPL")
     print_divider()
     while True:
         try:
