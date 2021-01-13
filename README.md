@@ -20,6 +20,7 @@ In the commandline, you can choose to type in
 
 - `'standings'` for a table created using Pandas that displays the current rankings of each team along with statistics such as wins, goals for,
   points etc..
+  
   <img src= "images/standings.png" width = "800">
 
 - `'live'` for a list of live games which will display respective match commentary depending on user's input
