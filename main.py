@@ -7,8 +7,16 @@ from bs4 import BeautifulSoup
 from live_functions import current_live_games
 from fixtures_functions import display_fixtures, print_divider
 
+team_dict = {
+    'ARS': 'Arsenal', 'MNC':'Manchester City', 'TOT': 'Tottenham Hotspur','BHA':'Brighton & Hove Albion',
+    'LEE': 'Leeds', 'CHE':'Chelsea', 'NEW':'Newcastle United', 'MAN':'Manchester United', 'LIV':'Liverpool',
+    'BRE': 'Brentford', 'FUL':'Fulham', 'CRY':'Crystal Palace', 'SOU':'Southhampton', 'FOR':'Nottingham Forest',
+    'AVL': 'Aston Villa', 'WHU': 'West Ham United', 'BOU': 'Bournemouth', 'EVE': 'Everton', 'WOL':'Wolverhampton Wanderers',
+    'LEI': 'Leicester City'
+}
+
 def team_string_check(name):
-    return re.sub(r'&amp;', '&', name)
+    return team_dict[re.sub(r'&amp;', '&', name)]
 
 def create_standings():
     page = requests.get("https://www.espn.com/soccer/table/_/league/eng.1")
@@ -24,13 +32,12 @@ def create_standings():
     statistics= {}
     table_position = 0
     for team in table2:
-        team_statistics = re.findall(r'>([0-9]+)<', str(team))
-        if team_statistics:
+        team_statistics = team.get_text('|').split('|')
+        if team_statistics and not team_statistics[0].isalpha():
             statistics[teams[table_position]] = team_statistics
             table_position += 1
-    rows = ['Games Played', 'Wins', 'Draws', 'Losses', 'Goals For', 'Goals Against', 'Points']
-    standings = pd.DataFrame(statistics, index=rows, columns=teams).transpose()
-    standings['Goal Difference'] = standings['Goals For'].astype(int) - standings['Goals Against'].astype(int)
+    cols = ['Games Played', 'Wins', 'Draws', 'Losses', 'Goals For', 'Goals Against', 'Goal Difference','Points']
+    standings = pd.DataFrame(statistics, index=cols, columns=teams).transpose()
     return standings
 
 def main():
